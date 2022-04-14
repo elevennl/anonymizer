@@ -1,0 +1,39 @@
+{
+  "tables": {
+	"dummy_data": {
+	  "username": {
+		"type": "fullname",
+		"action": "update"
+	  },
+	  "first_name": {
+		"type": "firstname",
+		"action": "update"
+	  },
+	  "last_name": {
+		"type": "lastname",
+		"action": "update"
+	  },
+	  "street": {
+		"type": "street",
+		"action": "update"
+	  },
+	  "city": {
+		"type": "city",
+		"action": "update"
+	  },
+	  "email": {
+		"type": "email",
+		"action": "update"
+	  },
+	  "telephone": {
+		"type": "telephone",
+		"action": "update"
+	  }
+	}
+  },
+  "custom_queries": {
+	"after": [
+	  "UPDATE dummy_data SET custom = CONCAT(id, '@anonymizer.nl') WHERE custom NOT LIKE '%@eleven.nl';"
+	]
+  }
+}
