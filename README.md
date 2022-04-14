@@ -28,7 +28,7 @@ That's why we also have a `lock.json` in the project.
 
 When this project is opened for the first time on a new computer please run:
 
-`deno cache --lock=lock.json src/anonymizer.ts`
+`deno cache --lock=lock.json src/deps.ts`
 
 This will make sure that the correct versions are downloaded into the computers cache where each import is integrity checked.
 
