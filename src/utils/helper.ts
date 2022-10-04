@@ -32,9 +32,6 @@ export const getDatabaseEnvironmentVariables = (): ClientConfig => {
 		throw new Error('Could not find the environment variable for one of the following "ANONYMIZER_LOCAL_DATABASE", "ANONYMIZER_LOCAL_USERNAME", "ANONYMIZER_LOCAL_PASSWORD"');
 	}
 
-	console.log(hostname);
-	console.log(port);
-
 	return {
 		hostname,
 		port,
