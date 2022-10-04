@@ -41,6 +41,44 @@ Rhum.testPlan('Test helper.ts methods', () => {
 			const variables = getConfigEnvironmentVariable();
 			Rhum.asserts.assertExists(variables);
 		});
+
+		Rhum.testCase('to check if hostname is set when no environment variable is given', () => {
+			Deno.env.set('ANONYMIZER_LOCAL_DATABASE', 'example');
+			Deno.env.set('ANONYMIZER_LOCAL_USERNAME', 'example');
+			Deno.env.set('ANONYMIZER_LOCAL_PASSWORD', 'example');
+
+			const variables = getDatabaseEnvironmentVariables();
+			Rhum.asserts.assertEquals('127.0.0.1', variables.hostname);
+		})
+
+		Rhum.testCase('to check if hostname is set when no environment variable is given', () => {
+			Deno.env.set('ANONYMIZER_LOCAL_HOSTNAME', 'localhost');
+			Deno.env.set('ANONYMIZER_LOCAL_DATABASE', 'example');
+			Deno.env.set('ANONYMIZER_LOCAL_USERNAME', 'example');
+			Deno.env.set('ANONYMIZER_LOCAL_PASSWORD', 'example');
+
+			const variables = getDatabaseEnvironmentVariables();
+			Rhum.asserts.assertEquals('localhost', variables.hostname);
+		})
+
+		Rhum.testCase('to check if hostname is set when no environment variable is given', () => {
+			Deno.env.set('ANONYMIZER_LOCAL_DATABASE', 'example');
+			Deno.env.set('ANONYMIZER_LOCAL_USERNAME', 'example');
+			Deno.env.set('ANONYMIZER_LOCAL_PASSWORD', 'example');
+
+			const variables = getDatabaseEnvironmentVariables();
+			Rhum.asserts.assertEquals(3306, variables.port);
+		})
+
+		Rhum.testCase('to check if hostname is set when no environment variable is given', () => {
+			Deno.env.set('ANONYMIZER_LOCAL_PORT', '6603');
+			Deno.env.set('ANONYMIZER_LOCAL_DATABASE', 'example');
+			Deno.env.set('ANONYMIZER_LOCAL_USERNAME', 'example');
+			Deno.env.set('ANONYMIZER_LOCAL_PASSWORD', 'example');
+
+			const variables = getDatabaseEnvironmentVariables();
+			Rhum.asserts.assertEquals(6603, variables.port);
+		})
 	});
 });
 
