@@ -20,7 +20,7 @@ import {FakerType} from './faker.type.enum.ts';
 
 faker.locale = await getFakerLocaleEnvironmentVariable();
 
-const assertNever = () => {
+const assertNever = (dataType: never) => {
 	throw new Error('Error');
 }
 
