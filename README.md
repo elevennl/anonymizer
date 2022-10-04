@@ -35,7 +35,7 @@ This will make sure that the correct versions are downloaded into the computers 
 ### How to build to an executable
 To compile the executable the following arguments need to be set during compile otherwise the executable will not be able to run correctly
 
-```deno compile --allow-read --allow-net --allow-env=ANONYMIZER_LOCAL_DATABASE,ANONYMIZER_LOCAL_USERNAME,ANONYMIZER_LOCAL_PASSWORD,ANONYMIZER_CONFIG,FAKER_LOCALE --output=build/anonymizer src/anonymizer.ts```
+```deno compile --allow-read --allow-net --allow-env=ANONYMIZER_LOCAL_HOSTNAME,ANONYMIZER_LOCAL_PORT,ANONYMIZER_LOCAL_DATABASE,ANONYMIZER_LOCAL_USERNAME,ANONYMIZER_LOCAL_PASSWORD,ANONYMIZER_CONFIG,FAKER_LOCALE --output=build/anonymizer src/anonymizer.ts```
 
 It is recommended to limit the `--allow` flags like for example `--allow-read=/var/www` and `--allow-net=127.0.0.1`.
 
@@ -50,6 +50,7 @@ You can use the provided `example.sql` and `example.json` to verify the tool
 1. Use the `example.sql` to create an `example` database with a `dummy_data` table and some entries
 2. Create an `example` user and password and only grant it permissions to the `example` database.
 3. Then run the Anonymizer using: `ANONYMIZER_LOCAL_DATABASE=example ANONYMIZER_LOCAL_USERNAME=example ANONYMIZER_LOCAL_PASSWORD=example ANONYMIZER_CONFIG=<path/to/example.json> FAKER_LOCALE=en anonymizer`
+4. Optionally you can add `ANONYMIZER_LOCAL_HOSTNAME=` and `ANONYMIZER_LOCAL_PORT=` to set the hostname and portnumber of MySQL
 
 ### Unit tests
 You can also run unit test by running the following command `deno test`

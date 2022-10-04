@@ -14,26 +14,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-type databaseConfig = {
-	database: string,
-	username: string,
-	password: string
-}
+import {ClientConfig} from 'https://deno.land/x/mysql@v2.10.2/src/client.ts';
 
 /**
  * Grab Environment variables so that we don't log these values in history or PS outputs
  */
-export const getDatabaseEnvironmentVariables = (): databaseConfig => {
-	const database: string | undefined = Deno.env.get('ANONYMIZER_LOCAL_DATABASE');
+export const getDatabaseEnvironmentVariables = (): ClientConfig => {
+	const hostnameConfig: string | undefined = Deno.env.get('ANONYMIZER_LOCAL_HOSTNAME');
+	const hostname: string = hostnameConfig ? hostnameConfig : '127.0.0.1';
+	const portConfig: string | undefined = Deno.env.get('ANONYMIZER_LOCAL_PORT')
+	const port: number | undefined = portConfig ? parseInt(portConfig) : 3306;
+	const db: string | undefined = Deno.env.get('ANONYMIZER_LOCAL_DATABASE');
 	const username: string | undefined = Deno.env.get('ANONYMIZER_LOCAL_USERNAME');
 	const password: string | undefined = Deno.env.get('ANONYMIZER_LOCAL_PASSWORD');
 
-	if (!database || !username || !password) {
+	if (!db || !username || !password) {
 		throw new Error('Could not find the environment variable for one of the following "ANONYMIZER_LOCAL_DATABASE", "ANONYMIZER_LOCAL_USERNAME", "ANONYMIZER_LOCAL_PASSWORD"');
 	}
 
+	console.log(hostname);
+	console.log(port);
+
 	return {
-		database,
+		hostname,
+		port,
+		db,
 		username,
 		password
 	};

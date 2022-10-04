@@ -17,17 +17,11 @@
 import {Client} from '../deps.ts';
 import {getDatabaseEnvironmentVariables} from '../utils/helper.ts';
 
-const {database, username, password} = getDatabaseEnvironmentVariables();
+const clientConfig = getDatabaseEnvironmentVariables();
 
 /**
  * Connect to the database by reading the command line arguments
  */
-const client: Client = await new Client().connect({
-	hostname: '127.0.0.1',
-	username,
-	db: database,
-	poolSize: 3,
-	password
-});
+const client: Client = await new Client().connect(clientConfig);
 
 export {client};
