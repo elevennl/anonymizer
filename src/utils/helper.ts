@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import {ClientConfig} from 'https://deno.land/x/mysql@v2.10.2/src/client.ts';
+import Progress from "https://deno.land/x/progress@v1.2.3/mod.ts"
 
 /**
  * Grab Environment variables so that we don't log these values in history or PS outputs
@@ -66,3 +67,27 @@ export const getFakerLocaleEnvironmentVariable = (): string => {
 
 	return locale;
 };
+
+
+export const unreachable = (target: never) => {
+	throw new Error(`Illegal state, unhandled case: ${target}`)
+}
+
+
+export const progress = (total: number): Progress => {
+	return new Progress({
+		total,
+		complete: '=',
+		incomplete: '-',
+		display: '         :completed/:total :time [:bar] :percent'
+	});
+}
+
+export const countdown = (total: number): Progress => {
+	return new Progress({
+		total: total + 1,
+		complete: '=',
+		incomplete: '-',
+		display: '         :time [:bar]'
+	});
+}

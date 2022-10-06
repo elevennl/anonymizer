@@ -66,6 +66,8 @@ export const getFakeData = (dataType: FakerType): string => {
 			return faker.internet.userName();
 		case FakerType.ZIPCODE:
 			return faker.address.zipCode();
+		case FakerType.QUOTE:
+			return faker.lorem.words(7)
 		default:
 			assertNever(dataType);
 			throw new Error(`Could not handle the method due to invalid FakerType: ${dataType}`);
