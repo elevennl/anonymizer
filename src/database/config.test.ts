@@ -2,6 +2,7 @@ import {mergeRulesets} from '../utils/ruleset.ts';
 import {FakerType} from '../faker/faker.type.enum.ts';
 import {ActionType} from './action.type.enum.ts';
 import {assertEquals} from 'https://deno.land/std@0.159.0/testing/asserts.ts';
+import {AnonymizerRules} from '../interfaces/anonymizer.rules.ts';
 
 Deno.test('merges configurations correctly', () => {
 	const ruleset = mergeRulesets(
@@ -87,7 +88,7 @@ Deno.test('merges partial configurations correctly', () => {
 			custom_queries: {
 				before: ['1'],
 			}
-		},
+		} as AnonymizerRules,
 	);
 
 	assertEquals(ruleset.tables.table1.col1.type, FakerType.COMPANY);
