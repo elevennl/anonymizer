@@ -15,14 +15,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import {faker} from '../deps.ts';
-import {getFakerLocaleEnvironmentVariable} from '../utils/helper.ts';
+import {getFakerLocaleEnvironmentVariable, unreachable} from '../utils/helper.ts';
 import {FakerType} from './faker.type.enum.ts';
 
 faker.locale = await getFakerLocaleEnvironmentVariable();
-
-const assertNever = (dataType: never) => {
-	throw new Error('Error');
-}
 
 /**
  * Returns fake data based on the given dataType.
@@ -67,9 +63,9 @@ export const getFakeData = (dataType: FakerType): string => {
 		case FakerType.ZIPCODE:
 			return faker.address.zipCode();
 		case FakerType.QUOTE:
-			return faker.lorem.words(7)
+			return faker.lorem.words(7);
 		default:
-			assertNever(dataType);
+			unreachable(dataType);
 			throw new Error(`Could not handle the method due to invalid FakerType: ${dataType}`);
 	}
 };

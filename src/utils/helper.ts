@@ -14,8 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import {ClientConfig} from 'https://deno.land/x/mysql@v2.10.2/src/client.ts';
-import Progress from "https://deno.land/x/progress@v1.2.3/mod.ts"
+import {ClientConfig, Progress} from '../deps.ts';
 
 /**
  * Grab Environment variables so that we don't log these values in history or PS outputs
@@ -23,7 +22,7 @@ import Progress from "https://deno.land/x/progress@v1.2.3/mod.ts"
 export const getDatabaseEnvironmentVariables = (): ClientConfig => {
 	const hostnameConfig: string | undefined = Deno.env.get('ANONYMIZER_LOCAL_HOSTNAME');
 	const hostname: string = hostnameConfig ? hostnameConfig : '127.0.0.1';
-	const portConfig: string | undefined = Deno.env.get('ANONYMIZER_LOCAL_PORT')
+	const portConfig: string | undefined = Deno.env.get('ANONYMIZER_LOCAL_PORT');
 	const port: number | undefined = portConfig ? parseInt(portConfig) : 3306;
 	const db: string | undefined = Deno.env.get('ANONYMIZER_LOCAL_DATABASE');
 	const username: string | undefined = Deno.env.get('ANONYMIZER_LOCAL_USERNAME');
@@ -68,11 +67,9 @@ export const getFakerLocaleEnvironmentVariable = (): string => {
 	return locale;
 };
 
-
 export const unreachable = (target: never) => {
-	throw new Error(`Illegal state, unhandled case: ${target}`)
-}
-
+	throw new Error(`Illegal state, unhandled case: ${target}`);
+};
 
 export const progress = (total: number): Progress => {
 	return new Progress({
@@ -81,7 +78,7 @@ export const progress = (total: number): Progress => {
 		incomplete: '-',
 		display: '         :completed/:total :time [:bar] :percent'
 	});
-}
+};
 
 export const countdown = (total: number): Progress => {
 	return new Progress({
@@ -90,4 +87,4 @@ export const countdown = (total: number): Progress => {
 		incomplete: '-',
 		display: '         :time [:bar]'
 	});
-}
+};

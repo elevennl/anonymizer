@@ -14,10 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import {getFakeData} from '../faker/faker.ts';
-import {FakerType} from '../faker/faker.type.enum.ts';
 import {Column, Table} from '../interfaces/anonymizer.rules.ts';
-import {ActionType} from './action.type.enum.ts';
 import {config} from './config.ts';
 import {client} from './connection.ts';
 import {parseRowConfig, truncate, updateToFakerValue, updateToStaticValue} from './anonimizer.ts';
@@ -52,7 +49,7 @@ const executeCustomQuery = async (query: string): Promise<void> => {
  * Run the queries specified in the JSON config file.
  */
 const runQueriesFromConfig = async () => {
-	console.time('Anonimizer done in: ')
+	console.time('Anonimizer done in: ');
 
 	const tables: Record<string, Table> = config.tables;
 	const tableNames: string[] = Object.keys(tables);
@@ -63,28 +60,28 @@ const runQueriesFromConfig = async () => {
 		const columns: Record<string, Column> = tables[table];
 		const columnNames: string[] = Object.keys(columns);
 
-		const rowConfig = parseRowConfig(columnNames, columns)
+		const rowConfig = parseRowConfig(columnNames, columns);
 
 		if (rowConfig.truncate) {
 			await truncate(table);
 		} else {
 			if (rowConfig.empty.length > 0 || rowConfig.staticValue.length > 0) {
-				await updateToStaticValue(table, rowConfig)
+				await updateToStaticValue(table, rowConfig);
 			}
 
 			if (rowConfig.fakerValue.length > 0) {
-				await updateToFakerValue(table, rowConfig)
+				await updateToFakerValue(table, rowConfig);
 			}
 		}
 
 		console.timeEnd(`  Table ${table} done in`);
-		console.log('')
-		console.log('----------------------------------------------------------------')
-		console.log('')
+		console.log('');
+		console.log('----------------------------------------------------------------');
+		console.log('');
 	}
 
 	await client.execute('DROP TABLE IF EXISTS `ANONYMIZER_JOIN_TABLE`;');
-	console.timeEnd('Anonimizer done in: ')
+	console.timeEnd('Anonimizer done in: ');
 };
 
 export {executeCustomQueries, runQueriesFromConfig};
