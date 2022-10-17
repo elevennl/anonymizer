@@ -14,12 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import {getFakeData} from '../faker/faker.ts';
-import {FakerType} from '../faker/faker.type.enum.ts';
 import {Column, Table} from '../interfaces/anonymizer.rules.ts';
-import {ActionType} from './action.type.enum.ts';
 import {config} from './config.ts';
 import {client} from './connection.ts';
+import {parseRowConfig, truncate, updateToFakerValue, updateToStaticValue} from './anonimizer.ts';
 
 /**
  * Execute the custom_queries in the 'after' object
@@ -48,93 +46,42 @@ const executeCustomQuery = async (query: string): Promise<void> => {
 };
 
 /**
- * Execute the queries as configured in the given JSON file.
- *
- * @param table
- * @param column
- * @param fakerType
- * @param actionType
- * @param value
- */
-const executeQuery = async (table: string, column: string, fakerType: FakerType | undefined, actionType: string, value: string | undefined): Promise<void> => {
-	if (ActionType.TRUNCATE === actionType) {
-		return await client.transaction(async (conn) => {
-			await conn.execute(`SET FOREIGN_KEY_CHECKS = ?`, [0]);
-			await conn.execute(`TRUNCATE ??;`, [table]);
-			await conn.execute(`SET FOREIGN_KEY_CHECKS = ?;`, [1]);
-		});
-	}
-
-	if (ActionType.EMPTY === actionType) {
-		return await client.transaction(async (conn) => {
-			// @formatter:off
-			await conn.execute(`UPDATE ?? SET ?? = ''`, [table, column]);
-			// @formatter:on
-		});
-	}
-
-	if (ActionType.SET_STATIC === actionType && value) {
-		return await client.transaction(async (conn) => {
-			// @formatter:off
-			await conn.query(`UPDATE ?? SET ?? = ?`, [table, column, `${value}`]);
-			// @formatter:on
-		});
-	}
-
-	if (ActionType.UPDATE === actionType && fakerType !== undefined) {
-		// @formatter:off
-		const {rows: rows} = await client.execute(`SELECT * FROM ??`, [table]);
-		// @formatter:on
-		const columnId: string = await getPrimaryColumnForTable(table);
-
-		if (rows && rows.length > 0) {
-			for (const row of rows) {
-				const fakeData = getFakeData(fakerType);
-
-				await client.transaction(async (conn) => {
-					// @formatter:off
-					return await conn.query(`UPDATE ?? SET ?? = ? WHERE ?? = ?`, [
-						`${table}`,
-						`${column}`,
-						`${fakeData}`,
-						`${columnId}`,
-						`${row[columnId]}`
-					]);
-					// @formatter:on
-				});
-			}
-		}
-	}
-};
-
-/**
- * Get the primary key column, or the column used as the id for the given table.
- * @param table
- */
-const getPrimaryColumnForTable = async (table: string): Promise<string> => {
-	const {rows: primaryColumns} = await client.execute(`SHOW KEYS FROM ?? WHERE Key_name = 'PRIMARY'`, [table]);
-	return (primaryColumns && primaryColumns.length > 0) ? primaryColumns[0].Column_name : 'id';
-};
-
-/**
  * Run the queries specified in the JSON config file.
  */
 const runQueriesFromConfig = async () => {
+	console.time('Anonimizer done in: ');
+
 	const tables: Record<string, Table> = config.tables;
 	const tableNames: string[] = Object.keys(tables);
 
 	for (const table of tableNames) {
+		console.log(`+ Starting for table ${table}`);
+		console.time(`  Table ${table} done in`);
 		const columns: Record<string, Column> = tables[table];
 		const columnNames: string[] = Object.keys(columns);
 
-		for (const column of columnNames) {
-			const actionType: ActionType = columns[column]?.action;
-			const fakerType: FakerType | undefined = columns[column]?.type;
-			const value: string | undefined = columns[column]?.value;
+		const rowConfig = parseRowConfig(columnNames, columns);
 
-			await executeQuery(table, column, fakerType, actionType, value);
+		if (rowConfig.truncate) {
+			await truncate(table);
+		} else {
+			if (rowConfig.empty.length > 0 || rowConfig.staticValue.length > 0) {
+				await updateToStaticValue(table, rowConfig);
+			}
+
+			if (rowConfig.fakerValue.length > 0) {
+				await updateToFakerValue(table, rowConfig);
+			}
 		}
+
+		console.timeEnd(`  Table ${table} done in`);
+		console.log('');
+		console.log('----------------------------------------------------------------');
+		console.log('');
 	}
+
+	await client.execute('DROP TABLE IF EXISTS `ANONYMIZER_JOIN_TABLE`;');
+	console.timeEnd('Anonimizer done in: ');
 };
 
-export {executeCustomQueries, executeQuery, runQueriesFromConfig};
+export {executeCustomQueries, runQueriesFromConfig};

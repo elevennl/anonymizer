@@ -32,5 +32,6 @@ export enum FakerType {
 	UNIQUE_EMAIL = 'uniq_email',
 	IP_ADDRESS = 'ip',
 	COMPANY = 'company',
-	VAT_ID = 'vat_id'
+	VAT_ID = 'vat_id',
+	QUOTE = 'quote'
 }

@@ -49,7 +49,7 @@ Rhum.testPlan('Test helper.ts methods', () => {
 
 			const variables = getDatabaseEnvironmentVariables();
 			Rhum.asserts.assertEquals('127.0.0.1', variables.hostname);
-		})
+		});
 
 		Rhum.testCase('to check if hostname is set when no environment variable is given', () => {
 			Deno.env.set('ANONYMIZER_LOCAL_HOSTNAME', 'localhost');
@@ -59,7 +59,7 @@ Rhum.testPlan('Test helper.ts methods', () => {
 
 			const variables = getDatabaseEnvironmentVariables();
 			Rhum.asserts.assertEquals('localhost', variables.hostname);
-		})
+		});
 
 		Rhum.testCase('to check if hostname is set when no environment variable is given', () => {
 			Deno.env.set('ANONYMIZER_LOCAL_DATABASE', 'example');
@@ -68,7 +68,7 @@ Rhum.testPlan('Test helper.ts methods', () => {
 
 			const variables = getDatabaseEnvironmentVariables();
 			Rhum.asserts.assertEquals(3306, variables.port);
-		})
+		});
 
 		Rhum.testCase('to check if hostname is set when no environment variable is given', () => {
 			Deno.env.set('ANONYMIZER_LOCAL_PORT', '6603');
@@ -78,7 +78,7 @@ Rhum.testPlan('Test helper.ts methods', () => {
 
 			const variables = getDatabaseEnvironmentVariables();
 			Rhum.asserts.assertEquals(6603, variables.port);
-		})
+		});
 	});
 });
 
