@@ -82,12 +82,12 @@ Deno.test('merges partial configurations correctly', () => {
 					}
 				},
 			}
-		} as any,
+		} as Any,
 		{
 			custom_queries: {
 				before: ['1'],
 			}
-		} as any,
+		} as Any,
 	);
 
 	assertEquals(ruleset.tables.table1.col1.type, FakerType.COMPANY);

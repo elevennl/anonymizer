@@ -1,7 +1,7 @@
 import {AnonymizerRules} from '../interfaces/anonymizer.rules.ts';
 
-export const mergeRulesets = (...rulesets: AnonymizerRules[]): AnonymizerRules => {
-	let rules: AnonymizerRules = {
+export const mergeRulesets = (...rulesets: Partial<AnonymizerRules>[]): AnonymizerRules => {
+	const rules: AnonymizerRules = {
 		tables: {},
 		custom_queries: {
 			before: [],
