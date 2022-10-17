@@ -16,6 +16,7 @@
  */
 import {AnonymizerRules} from '../interfaces/anonymizer.rules.ts';
 import {getConfigEnvironmentVariable} from '../utils/helper.ts';
+import {mergeRulesets} from '../utils/ruleset.ts';
 
 /**
  * Get the Anonymizer config file given as a json file
@@ -24,9 +25,23 @@ import {getConfigEnvironmentVariable} from '../utils/helper.ts';
  */
 const getConfig = async (): Promise<AnonymizerRules> => {
 	const config = getConfigEnvironmentVariable();
-	const decoder = new TextDecoder('utf-8');
-	const data = await Deno.readFile(config);
-	return JSON.parse(decoder.decode(data));
+
+	let configFilePaths: string[] = []
+
+	if (config.includes(',')) {
+		//join configs
+		configFilePaths = config.split(',').map(item => item.trim())
+	} else {
+		configFilePaths = [config];
+	}
+
+	const rulesets = await Promise.all(configFilePaths.map(async (filePath) => {
+		const decoder = new TextDecoder('utf-8');
+		const data = await Deno.readFile(filePath);
+		return JSON.parse(decoder.decode(data)) as AnonymizerRules;
+	}))
+
+	return mergeRulesets(...rulesets)
 };
 
 const config: AnonymizerRules = await getConfig();
