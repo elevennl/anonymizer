@@ -16,6 +16,10 @@
  */
 import {ClientConfig, Progress} from '../deps.ts';
 
+export const getTimeoutEnvironmentVariable = (): number => {
+	const connectionTimeoutConfig: string | undefined = Deno.env.get('ANONYMIZER_LOCAL_CONNECTION_TIMEOUT');
+	return connectionTimeoutConfig ? parseInt(connectionTimeoutConfig) : 60;
+};
 /**
  * Grab Environment variables so that we don't log these values in history or PS outputs
  */
@@ -37,7 +41,8 @@ export const getDatabaseEnvironmentVariables = (): ClientConfig => {
 		port,
 		db,
 		username,
-		password
+		password,
+		timeout: getTimeoutEnvironmentVariable() * 1000
 	};
 };
 

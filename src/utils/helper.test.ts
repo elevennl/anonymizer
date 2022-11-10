@@ -27,6 +27,7 @@ describe('Test helper.ts getDatabaseEnvironmentVariables() method', () => {
 		Deno.env.delete('ANONYMIZER_LOCAL_PASSWORD');
 		Deno.env.delete('ANONYMIZER_LOCAL_HOSTNAME');
 		Deno.env.delete('ANONYMIZER_LOCAL_PORT');
+		Deno.env.delete('ANONYMIZER_LOCAL_CONNECTION_TIMEOUT');
 		Deno.env.delete('ANONYMIZER_CONFIG');
 	});
 
@@ -80,6 +81,18 @@ describe('Test helper.ts getDatabaseEnvironmentVariables() method', () => {
 		Deno.env.set('ANONYMIZER_LOCAL_PORT', '6603');
 		const variables = getDatabaseEnvironmentVariables();
 		assertEquals(6603, variables.port);
+	});
+
+	it('to set the default timeout value if no environment variable is given', () => {
+		Deno.env.delete('ANONYMIZER_LOCAL_CONNECTION_TIMEOUT');
+		const variables = getDatabaseEnvironmentVariables();
+		assertEquals(60000, variables.timeout);
+	});
+
+	it('to set the port given by ANONYMIZER_LOCAL_CONNECTION_TIMEOUT', () => {
+		Deno.env.set('ANONYMIZER_LOCAL_CONNECTION_TIMEOUT', '1');
+		const variables = getDatabaseEnvironmentVariables();
+		assertEquals(1000, variables.timeout);
 	});
 });
 

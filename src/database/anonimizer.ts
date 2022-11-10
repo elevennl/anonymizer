@@ -1,6 +1,6 @@
 import {getFakeData} from '../faker/faker.ts';
 import {FakerType} from '../faker/faker.type.enum.ts';
-import {countdown, progress, unreachable} from '../utils/helper.ts';
+import {countdown, getTimeoutEnvironmentVariable, progress, unreachable} from '../utils/helper.ts';
 import {client} from './connection.ts';
 
 import {Progress} from '../deps.ts';
@@ -26,12 +26,14 @@ export interface RowConfig {
 	fakerValue: FakerValueConfig[]
 }
 
+const timeout: number = getTimeoutEnvironmentVariable();
+
 export const parseRowConfig = (columnNames: string[], columns: Record<string, Column>) => {
 	const rowConfig: RowConfig = {
 		truncate: false,
 		empty: [],
 		staticValue: [],
-		fakerValue: [],
+		fakerValue: []
 	};
 
 	for (const column of columnNames) {
@@ -75,8 +77,8 @@ const getPrimaryColumnForTable = async (table: string): Promise<string> => {
 export const truncate = async (tableName: string) => {
 	console.log('     [i] executing truncate');
 
-	const updateProgress = countdown(60);
-	let current = 60;
+	const updateProgress = countdown(timeout);
+	let current = timeout;
 	const interval = setInterval(() => {
 		current -= 1;
 		updateProgress.render(current);
@@ -175,7 +177,7 @@ export const updateToFakerValue = async (table: string, rowConfig: RowConfig) =>
 
 	if (count > 10_000) {
 		console.log(`     [i] executing update for ${count} rows`);
-		let current = 60;
+		let current = timeout;
 
 		updateProgress = countdown(current);
 		interval = setInterval(() => {
