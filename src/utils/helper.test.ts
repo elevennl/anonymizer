@@ -31,9 +31,9 @@ describe('Test helper.ts getDatabaseEnvironmentVariables() method', () => {
 	});
 
 	beforeEach(() => {
-		Deno.env.set('ANONYMIZER_LOCAL_DATABASE', 'example1');
-		Deno.env.set('ANONYMIZER_LOCAL_USERNAME', 'example2');
-		Deno.env.set('ANONYMIZER_LOCAL_PASSWORD', 'example3');
+		Deno.env.set('ANONYMIZER_LOCAL_DATABASE', 'example_db');
+		Deno.env.set('ANONYMIZER_LOCAL_USERNAME', 'example_username');
+		Deno.env.set('ANONYMIZER_LOCAL_PASSWORD', 'example_pw');
 	});
 
 	it('to throw error when ANONYMIZER_LOCAL_DATABASE is missing', () => {
@@ -54,9 +54,9 @@ describe('Test helper.ts getDatabaseEnvironmentVariables() method', () => {
 	it('to use the correct settings from the enviroment variables', () => {
 		const variables = getDatabaseEnvironmentVariables();
 		assertObjectMatch(variables, {
-			db: 'example1',
-			username: 'example2',
-			password: 'example3'
+			db: 'example_db',
+			username: 'example_username',
+			password: 'example_pw'
 		});
 	});
 
@@ -78,7 +78,6 @@ describe('Test helper.ts getDatabaseEnvironmentVariables() method', () => {
 
 	it('to set the port given by ANONYMIZER_LOCAL_PORT', () => {
 		Deno.env.set('ANONYMIZER_LOCAL_PORT', '6603');
-
 		const variables = getDatabaseEnvironmentVariables();
 		assertEquals(6603, variables.port);
 	});
