@@ -23,8 +23,7 @@ const clientConfig = getDatabaseEnvironmentVariables();
  * Connect to the database by reading the command line arguments
  */
 const client: Client = await new Client().connect({
-	...clientConfig,
-	timeout: 60 * 1000
+	...clientConfig
 });
 
 export {client};

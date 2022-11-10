@@ -1,8 +1,8 @@
 import {mergeRulesets} from '../utils/ruleset.ts';
 import {FakerType} from '../faker/faker.type.enum.ts';
 import {ActionType} from './action.type.enum.ts';
-import {assertEquals} from 'https://deno.land/std@0.159.0/testing/asserts.ts';
 import {AnonymizerRules} from '../interfaces/anonymizer.rules.ts';
+import {assertEquals} from '../deps.ts';
 
 Deno.test('merges configurations correctly', () => {
 	const ruleset = mergeRulesets(

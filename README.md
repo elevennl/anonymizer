@@ -28,14 +28,14 @@ That's why we also have a `lock.json` in the project.
 
 When this project is opened for the first time on a new computer please run:
 
-`deno cache --lock=lock.json src/deps.ts`
+```deno cache --lock=lock.json src/deps.ts```
 
 This will make sure that the correct versions are downloaded into the computers cache where each import is integrity checked.
 
 ### How to build to an executable
 To compile the executable the following arguments need to be set during compile otherwise the executable will not be able to run correctly
 
-```deno compile --allow-read --allow-net --allow-env=ANONYMIZER_LOCAL_HOSTNAME,ANONYMIZER_LOCAL_PORT,ANONYMIZER_LOCAL_DATABASE,ANONYMIZER_LOCAL_USERNAME,ANONYMIZER_LOCAL_PASSWORD,ANONYMIZER_CONFIG,FAKER_LOCALE --output=build/anonymizer src/anonymizer.ts```
+```deno compile --allow-read --allow-net --allow-env=ANONYMIZER_LOCAL_HOSTNAME,ANONYMIZER_LOCAL_PORT,ANONYMIZER_LOCAL_DATABASE,ANONYMIZER_LOCAL_USERNAME,ANONYMIZER_LOCAL_PASSWORD,ANONYMIZER_CONFIG,ANONYMIZER_LOCAL_CONNECTION_TIMEOUT,FAKER_LOCALE --output=build/anonymizer src/anonymizer.ts```
 
 It is recommended to limit the `--allow` flags like for example `--allow-read=/var/www` and `--allow-net=127.0.0.1`.
 
@@ -50,7 +50,11 @@ You can use the provided `example.sql` and `example.json` to verify the tool
 1. Use the `example.sql` to create an `example` database with a `dummy_data` table and some entries
 2. Create an `example` user and password and only grant it permissions to the `example` database.
 3. Then run the Anonymizer using: `ANONYMIZER_LOCAL_DATABASE=example ANONYMIZER_LOCAL_USERNAME=example ANONYMIZER_LOCAL_PASSWORD=example ANONYMIZER_CONFIG=<path/to/example.json> FAKER_LOCALE=en anonymizer`
-4. Optionally you can add `ANONYMIZER_LOCAL_HOSTNAME=` and `ANONYMIZER_LOCAL_PORT=` to set the hostname and portnumber of MySQL
+4. The following ENV variables are optional
+   * `ANONYMIZER_LOCAL_HOSTNAME` sets the hostname of MySQL (defaults to `127.0.0.1`)
+   * `ANONYMIZER_LOCAL_PORT` sets the port number of MySQL (defaults to `3306` )
+   * `ANONYMIZER_LOCAL_CONNECTION_TIMEOUT` set DB connection timeout in seconds (defaults to `60` )
+   * `FAKER_LOCALE` sets the faker locale (defaults to `en` )
 
 ### Unit tests
 You can also run unit test by running the following command `deno test`
