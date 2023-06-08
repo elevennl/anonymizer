@@ -184,7 +184,7 @@ export const updateToFakerValue = async (table: string, rowConfig: RowConfig) =>
 	const updateQuery = `
         UPDATE \`${table}\` as target
             INNER JOIN \`ANONYMIZER_JOIN_TABLE\` as data
-        ON IF (target.id % 10000 = 0, 10000, target.id % 10000) = data.id
+        ON IF (target.${columnId} % 10000 = 0, 10000, target.${columnId} % 10000) = data.id
             SET ${updatePlaceholders}
 	`;
 
