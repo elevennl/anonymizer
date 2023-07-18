@@ -156,80 +156,74 @@ export const updateToFakerValue = async (table: string, rowConfig: RowConfig) =>
 	console.log(`   [i] Seeding merge table`);
 	schema.unshift('id');
 
-	let columnId = '';
+	const columnId = await getPrimaryColumnForTable(table);
 
-	try {
-		columnId = await getPrimaryColumnForTable(table);
+	const {rows: countRows} = await client.execute(`SELECT COUNT(??) as count
+                                                    FROM ??`, [columnId, table]);
 
-		const {rows: countRows} = await client.execute(`SELECT COUNT(??) as count
-                                                        FROM ??`, [columnId, table]);
+	const count = countRows?.[0]?.count;
+	if (count === undefined) {
+		throw new Error('Expected value');
+	}
+	const progressBar = progress(10_000);
 
-		const count = countRows?.[0]?.count;
-		if (count === undefined) {
-			throw new Error('Expected value');
-		}
-		const progressBar = progress(10_000);
+	const queue = new Set<string[]>();
+	for (let j = 0; j < 10; j++) {
+		for (let i = 0; i < 1000; i++) {
+			progressBar.render((j * 1000) + i);
+			const data = [] as string[];
 
-		const queue = new Set<string[]>();
-		for (let j = 0; j < 10; j++) {
-			for (let i = 0; i < 1000; i++) {
-				progressBar.render((j * 1000) + i);
-				const data = [] as string[];
-
-				rowConfig.fakerValue.forEach(({value}) => {
-					data.push(getFakeData(value));
-				});
-				queue.add(data);
-			}
-
-			const schemaWithoutId = schema.slice(1);
-			const columnPlaceholders = Array(schemaWithoutId.length).fill('??').join(', ');
-			const valuePlaceholders = Array(schemaWithoutId.length).fill('?').join(', ');
-			const value = Array(queue.size).fill(`(${valuePlaceholders})`).join(', ');
-			await client.execute(`INSERT INTO ANONYMIZER_JOIN_TABLE (${columnPlaceholders})
-                                  VALUES ${value}`, [...schemaWithoutId, ...[...queue].flat(1)]);
-			queue.clear();
-		}
-		progressBar.render(10_000);
-
-		console.log(`   [i] Replacing faker data`);
-
-		const updatePlaceholders = schema.slice(1).map(() => `?? = ??`).join(', ');
-		const updateData = schema.slice(1).flatMap(colName => [`target.${colName}`, `data.${colName}`]);
-
-		const updateQuery = `
-            UPDATE \`${table}\` as target
-                INNER JOIN \`ANONYMIZER_JOIN_TABLE\` as data
-            ON IF (target.${columnId} % 10000 = 0, 10000, target.${columnId} % 10000) = data.id
-                SET ${updatePlaceholders}
-		`;
-
-		let updateProgress: Progress;
-		let interval: number;
-
-		if (count > 10_000) {
-			console.log(`     [i] Executing update for ${count} rows`);
-			let current = timeout;
-
-			updateProgress = countdown(current);
-			interval = setInterval(() => {
-				current -= 1;
-				updateProgress.render(current);
-			}, 1000);
+			rowConfig.fakerValue.forEach(({value}) => {
+				data.push(getFakeData(value));
+			});
+			queue.add(data);
 		}
 
-		const result = await client.execute(updateQuery, updateData);
+		const schemaWithoutId = schema.slice(1);
+		const columnPlaceholders = Array(schemaWithoutId.length).fill('??').join(', ');
+		const valuePlaceholders = Array(schemaWithoutId.length).fill('?').join(', ');
+		const value = Array(queue.size).fill(`(${valuePlaceholders})`).join(', ');
+		await client.execute(`INSERT INTO ANONYMIZER_JOIN_TABLE (${columnPlaceholders})
+                              VALUES ${value}`, [...schemaWithoutId, ...[...queue].flat(1)]);
+		queue.clear();
+	}
+	progressBar.render(10_000);
 
-		if (count > 10_000) {
-			clearInterval(interval!);
-			updateProgress!.end();
-		}
+	console.log(`   [i] Replacing faker data`);
 
-		if (result.affectedRows != count) {
-			console.warn('     [!] Some rows were not updated!');
-			console.warn(`         affectedRows: ${result.affectedRows}, rowCount: ${count}`);
-		}
-	} catch (e) {
-		throw new Error(`[!] Error with anonymizing for table ${table}: ${e.message}`)
+	const updatePlaceholders = schema.slice(1).map(() => `?? = ??`).join(', ');
+	const updateData = schema.slice(1).flatMap(colName => [`target.${colName}`, `data.${colName}`]);
+
+	const updateQuery = `
+        UPDATE \`${table}\` as target
+            INNER JOIN \`ANONYMIZER_JOIN_TABLE\` as data
+        ON IF (target.${columnId} % 10000 = 0, 10000, target.${columnId} % 10000) = data.id
+            SET ${updatePlaceholders}
+	`;
+
+	let updateProgress: Progress;
+	let interval: number;
+
+	if (count > 10_000) {
+		console.log(`     [i] Executing update for ${count} rows`);
+		let current = timeout;
+
+		updateProgress = countdown(current);
+		interval = setInterval(() => {
+			current -= 1;
+			updateProgress.render(current);
+		}, 1000);
+	}
+
+	const result = await client.execute(updateQuery, updateData);
+
+	if (count > 10_000) {
+		clearInterval(interval!);
+		updateProgress!.end();
+	}
+
+	if (result.affectedRows != count) {
+		console.warn('     [!] Some rows were not updated!');
+		console.warn(`         affectedRows: ${result.affectedRows}, rowCount: ${count}`);
 	}
 };
