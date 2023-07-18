@@ -17,7 +17,7 @@
 import {Column, Table} from '../interfaces/anonymizer.rules.ts';
 import {config} from './config.ts';
 import {client} from './connection.ts';
-import {parseRowConfig, truncate, updateToFakerValue, updateToStaticValue} from './anonimizer.ts';
+import {parseRowConfig, truncate, updateToFakerValue, updateToStaticValue} from './anonymizer.ts';
 
 /**
  * Execute the custom_queries in the 'after' object
@@ -45,43 +45,58 @@ const executeCustomQuery = async (query: string): Promise<void> => {
 	});
 };
 
+async function updateTable(table: string, tables: Record<string, Table>, errors: Error[]) {
+	console.log(`>> Starting for table ${table}`);
+	console.time(`  Table ${table} done in`);
+	const columns: Record<string, Column> = tables[table];
+	const columnNames: string[] = Object.keys(columns);
+	const rowConfig = parseRowConfig(columnNames, columns);
+
+	if (rowConfig.truncate) {
+		await truncate(table);
+	} else {
+		if (rowConfig.empty.length > 0 || rowConfig.staticValue.length > 0) {
+			await updateToStaticValue(table, rowConfig);
+		}
+
+		if (rowConfig.fakerValue.length > 0) {
+			try {
+				await updateToFakerValue(table, rowConfig);
+			} catch (e) {
+				errors.push(e);
+			}
+		}
+	}
+
+	console.timeEnd(`  Table ${table} done in`);
+	console.log('');
+	console.log('--------------------------------------------------------------------------------------------');
+	console.log('');
+}
+
 /**
  * Run the queries specified in the JSON config file.
  */
 const runQueriesFromConfig = async () => {
-	console.time('Anonimizer done in: ');
+	const errors: Error[] = [];
+	console.time('Anonymizer done in: ');
 
 	const tables: Record<string, Table> = config.tables;
 	const tableNames: string[] = Object.keys(tables);
 
 	for (const table of tableNames) {
-		console.log(`+ Starting for table ${table}`);
-		console.time(`  Table ${table} done in`);
-		const columns: Record<string, Column> = tables[table];
-		const columnNames: string[] = Object.keys(columns);
-
-		const rowConfig = parseRowConfig(columnNames, columns);
-
-		if (rowConfig.truncate) {
-			await truncate(table);
-		} else {
-			if (rowConfig.empty.length > 0 || rowConfig.staticValue.length > 0) {
-				await updateToStaticValue(table, rowConfig);
-			}
-
-			if (rowConfig.fakerValue.length > 0) {
-				await updateToFakerValue(table, rowConfig);
-			}
-		}
-
-		console.timeEnd(`  Table ${table} done in`);
-		console.log('');
-		console.log('----------------------------------------------------------------');
-		console.log('');
+		await updateTable(table, tables, errors);
 	}
 
 	await client.execute('DROP TABLE IF EXISTS `ANONYMIZER_JOIN_TABLE`;');
-	console.timeEnd('Anonimizer done in: ');
+	console.timeEnd('Anonymizer done in: ');
+
+	if (errors.length > 0) {
+		console.log('------------------------------------------Error Report------------------------------------------');
+		for (const error of errors) {
+			console.log(error.message);
+		}
+	}
 };
 
 export {executeCustomQueries, runQueriesFromConfig};

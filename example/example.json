@@ -1,5 +1,11 @@
 {
   "tables": {
+	"non_existing_table": {
+	  "username": {
+		"type": "fullname",
+		"action": "update"
+	  }
+	},
 	"dummy_data": {
 	  "username": {
 		"type": "fullname",
@@ -11,6 +17,10 @@
 	  },
 	  "last_name": {
 		"type": "lastname",
+		"action": "update"
+	  },
+	  "non_existing_column": {
+		"type": "telephone",
 		"action": "update"
 	  },
 	  "street": {
