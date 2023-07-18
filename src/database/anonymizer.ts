@@ -156,7 +156,7 @@ export const updateToFakerValue = async (table: string, rowConfig: RowConfig) =>
 	console.log(`   [i] Seeding merge table`);
 	schema.unshift('id');
 
-	let columnId: string = '';
+	let columnId = '';
 
 	try {
 		columnId = await getPrimaryColumnForTable(table);
