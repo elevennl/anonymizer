@@ -53,6 +53,7 @@ export const parseRowConfig = (columnNames: string[], columns: Record<string, Co
 	};
 
 	for (const column of columnNames) {
+		console.log(`   >> Parsing column ${column}`);
 		const columnConfig = columns[column];
 		switch (columnConfig.action) {
 			case ActionType.SET_STATIC:
@@ -91,7 +92,7 @@ const getPrimaryColumnForTable = async (table: string): Promise<string> => {
 };
 
 export const truncate = async (tableName: string) => {
-	console.log('     [i] executing truncate');
+	console.log('     [i] Executing truncate');
 
 	const updateProgress = countdown(timeout);
 	let current = timeout;
@@ -110,6 +111,11 @@ export const truncate = async (tableName: string) => {
 	updateProgress.end();
 };
 
+/**
+ * Set the given columns to a static value
+ * @param table
+ * @param rowConfig
+ */
 export const updateToStaticValue = async (table: string, rowConfig: RowConfig) => {
 	const sets = [] as string[];
 	const data = [table];
@@ -131,8 +137,13 @@ export const updateToStaticValue = async (table: string, rowConfig: RowConfig) =
 	}
 };
 
+/**
+ * Set the given columns to a random value, provided by Faker tool
+ * @param table
+ * @param rowConfig
+ */
 export const updateToFakerValue = async (table: string, rowConfig: RowConfig) => {
-	console.log(`     [i] creating merge table`);
+	console.log(`   [i] Creating merge table`);
 	const schema = [] as string[];
 
 	rowConfig.fakerValue.forEach(({columnName}) => {
@@ -142,41 +153,43 @@ export const updateToFakerValue = async (table: string, rowConfig: RowConfig) =>
 	await client.execute('DROP TABLE IF EXISTS `ANONYMIZER_JOIN_TABLE`;');
 	await client.execute('CREATE TABLE ANONYMIZER_JOIN_TABLE (`id` BIGINT NOT NULL AUTO_INCREMENT, ' + schema.map(() => `?? varchar(255)`).join(', ') + ', primary key (id))', schema);
 
-	console.log(`     [i] seeding merge table`);
+	console.log(`   [i] Seeding merge table`);
 	schema.unshift('id');
 
-	const columnId: string = await getPrimaryColumnForTable(table);
+	const columnId = await getPrimaryColumnForTable(table);
+
 	const {rows: countRows} = await client.execute(`SELECT COUNT(??) as count
                                                     FROM ??`, [columnId, table]);
+
 	const count = countRows?.[0]?.count;
 	if (count === undefined) {
 		throw new Error('Expected value');
 	}
-	const pb = progress(10_000);
+	const progressBar = progress(10_000);
 
-	const schemaWithoutId = schema.slice(1);
 	const queue = new Set<string[]>();
 	for (let j = 0; j < 10; j++) {
 		for (let i = 0; i < 1000; i++) {
-			pb.render((j * 1000) + i);
-
+			progressBar.render((j * 1000) + i);
 			const data = [] as string[];
+
 			rowConfig.fakerValue.forEach(({value}) => {
 				data.push(getFakeData(value));
 			});
 			queue.add(data);
 		}
 
+		const schemaWithoutId = schema.slice(1);
 		const columnPlaceholders = Array(schemaWithoutId.length).fill('??').join(', ');
 		const valuePlaceholders = Array(schemaWithoutId.length).fill('?').join(', ');
-		const v = Array(queue.size).fill(`(${valuePlaceholders})`).join(', ');
+		const value = Array(queue.size).fill(`(${valuePlaceholders})`).join(', ');
 		await client.execute(`INSERT INTO ANONYMIZER_JOIN_TABLE (${columnPlaceholders})
-                              VALUES ${v}`, [...schemaWithoutId, ...[...queue].flat(1)]);
+                              VALUES ${value}`, [...schemaWithoutId, ...[...queue].flat(1)]);
 		queue.clear();
 	}
-	pb.render(10_000);
+	progressBar.render(10_000);
 
-	console.log(`     [i] replacing faker data`);
+	console.log(`   [i] Replacing faker data`);
 
 	const updatePlaceholders = schema.slice(1).map(() => `?? = ??`).join(', ');
 	const updateData = schema.slice(1).flatMap(colName => [`target.${colName}`, `data.${colName}`]);
@@ -192,7 +205,7 @@ export const updateToFakerValue = async (table: string, rowConfig: RowConfig) =>
 	let interval: number;
 
 	if (count > 10_000) {
-		console.log(`     [i] executing update for ${count} rows`);
+		console.log(`     [i] Executing update for ${count} rows`);
 		let current = timeout;
 
 		updateProgress = countdown(current);
