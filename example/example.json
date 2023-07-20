@@ -42,8 +42,11 @@
 	}
   },
   "custom_queries": {
+	"before": [
+	  "UPDATE dummy_data SET wrong_column = CONCAT(id, '@anonymizer.nl') WHERE wrong_column NOT LIKE '%@eleven.nl';"
+	],
 	"after": [
-	  "UPDATE dummy_data SET custom = CONCAT(id, '@anonymizer.nl') WHERE custom NOT LIKE '%@eleven.nl';"
+	  "UPDATE dummy_data SET custom_column = CONCAT(id, '@anonymizer.nl') WHERE custom_column NOT LIKE '%@eleven.nl';"
 	]
   }
 }

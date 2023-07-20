@@ -24,13 +24,17 @@ import {parseRowConfig, RowConfig, truncate, updateToFakerValue, updateToStaticV
  *
  * @param queries
  */
-const executeCustomQueries = async (queries: string[]): Promise<void> => {
+const executeCustomQueries = async (queries: string[], errors: Error[]): Promise<void> => {
 	if (!queries || queries.length < 1) {
 		return;
 	}
 
 	for (const query of queries) {
-		await executeCustomQuery(query);
+		try {
+			await executeCustomQuery(query);
+		} catch (_e) {
+			errors.push(new Error(`Failed to execute custom query: ${query}`));
+		}
 	}
 };
 
@@ -42,11 +46,19 @@ const executeCustomQueries = async (queries: string[]): Promise<void> => {
 const executeCustomQuery = async (query: string): Promise<void> => {
 	await client.transaction(async (conn) => {
 		return await conn.query(query);
+	}).catch(() => {
+		throw new Error();
 	});
 };
 
-async function getDatabaseTables() {
-	return (await client.execute('SHOW TABLES;')).rows.map((row) => {
+async function getDatabaseTables(): Promise<string[]> {
+	const tables = await client.execute('SHOW TABLES;');
+
+	if (tables === undefined || tables.rows === undefined || tables.rows.length === 0) {
+		return [];
+	}
+
+	return tables.rows.map((row) => {
 		return row[`Tables_in_${client.config.db}`]
 	});
 }
@@ -85,8 +97,14 @@ async function getDatabaseTableColumns(table: string) {
  * Only process columns that exists in the database and is specified in the config file.
  * Also skip the 'id' column because it's the primary key and thereby not allowed to be anonymized.
  */
-async function getColumnsToBeProcessed(table: string, configColumns: Record<string, Column>) {
-	return (await getDatabaseTableColumns(table)).rows.map(row => row['COLUMN_NAME'])
+async function getColumnsToBeProcessed(table: string, configColumns: Record<string, Column>): Promise<string[]> {
+	const columns = await getDatabaseTableColumns(table);
+
+	if (columns === undefined || columns.rows === undefined || columns.rows.length === 0) {
+		return [];
+	}
+
+	return columns.rows.map(row => row['COLUMN_NAME'])
 		.filter(column => column !== 'id')
 		.filter(column => Object.keys(configColumns).includes(column));
 }
@@ -94,12 +112,15 @@ async function getColumnsToBeProcessed(table: string, configColumns: Record<stri
 /**
  * Check if the tables specified in the config file exists in the database, if not, log an error.
  * @param configTables tables as defined in the config file (i.e. the json file in anonymizer folder)
- * @param databaseTables tables found in the database
+ * @param toBeProcessedTables tables found in the database
  * @param errors
  */
-function validateConfigTables(configTables: Record<string, Table>, databaseTables: string[], errors: Error[]) {
+function validateConfigTables(configTables: Record<string, Table>, toBeProcessedTables: string[], errors: Error[]) {
+	if (toBeProcessedTables.length === 0) {
+		errors.push(new Error(`No tables found in database '${client.config.db}'`));
+	}
 	Object.keys(configTables)
-		.filter(table => !databaseTables.includes(table))
+		.filter(table => !toBeProcessedTables.includes(table))
 		.forEach(table => errors.push(new Error(`Given table '${table}' does not exist in the database`)));
 }
 
@@ -111,6 +132,10 @@ function validateConfigTables(configTables: Record<string, Table>, databaseTable
  * @param table the name of the table
  */
 function validateConfigColumns(configColumns: Record<string, Column>, toBeProcessedColumns: string[], errors: Error[], table: string) {
+	if (toBeProcessedColumns.length === 0) {
+		errors.push(new Error(`No columns found in database table '${table}'`));
+	}
+
 	Object.keys(configColumns)
 		.filter(column => !toBeProcessedColumns.includes(column))
 		.forEach(column => errors.push(new Error(`Given column '${column}' does not exist in database table '${table}'`)));
@@ -119,10 +144,9 @@ function validateConfigColumns(configColumns: Record<string, Column>, toBeProces
 /**
  * Run the queries specified in the JSON config file.
  */
-const runQueriesFromConfig = async () => {
+const runQueriesFromConfig = async (errors: Error[]) => {
 	console.time('Anonymizer done in: ');
 
-	const errors: Error[] = [];
 	const configTables: Record<string, Table> = config.tables;
 	const databaseTables: string[] = await getDatabaseTables();
 	const toBeProcessedTables: string[] = Object.keys(configTables).filter(table => databaseTables.includes(table));
@@ -143,14 +167,6 @@ const runQueriesFromConfig = async () => {
 
 	await client.execute('DROP TABLE IF EXISTS `ANONYMIZER_JOIN_TABLE`;');
 	console.timeEnd('Anonymizer done in: ');
-
-	if (errors.length > 0) {
-		console.log('------------------------------------------Error Report------------------------------------------');
-
-		for (const error of errors) {
-			console.log('   [error] ' + error.message);
-		}
-	}
 };
 
 export {executeCustomQueries, runQueriesFromConfig};
