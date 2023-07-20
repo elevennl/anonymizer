@@ -18,14 +18,24 @@ import {config} from './database/config.ts';
 import {client} from './database/connection.ts';
 import {executeCustomQueries, runQueriesFromConfig} from './database/transactions.ts';
 
+const errors: Error[] = [];
+
 // Do the first custom queries
-await executeCustomQueries(config.custom_queries.before);
+await executeCustomQueries(config.custom_queries.before, errors);
 
 // Do the other queries specified in the config
-await runQueriesFromConfig();
+await runQueriesFromConfig(errors);
 
 // Do the final custom queries
-await executeCustomQueries(config.custom_queries.after);
+await executeCustomQueries(config.custom_queries.after, errors);
 
 // Done! Close the connection.
 await client.close();
+
+if (errors.length > 0) {
+	console.log('------------------------------------------Error Report------------------------------------------');
+
+	for (const error of errors) {
+		console.log('   [error] ' + error.message);
+	}
+}
